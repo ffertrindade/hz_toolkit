@@ -24,7 +24,7 @@ sites_final=($(echo ${sites_tmp[@]} ${sites_hibr[@]} | tr ' ' '\n' | sort | uniq
 unset sites_pop1 sites_pop2 sites_hibr sites_tmp
 echo ${sites_final[@]}
 
-## selecting commom sites - to prepare aHMM file only for overlaid called sites
+## selecting common sites - to prepare aHMM file only for overlaid called sites
 for (( i=0; i<"${#sites_final[@]}"; i++ )); do
 	a=$(echo ${sites_final[i]} | sed 's/_/ /g' | awk '{print $1}')
 	b=$(echo ${sites_final[i]} | sed 's/_/ /g' | awk '{print $2}')
