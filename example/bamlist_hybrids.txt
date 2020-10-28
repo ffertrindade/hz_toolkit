@@ -1,0 +1,5 @@
+hybrid001.bam
+hybrid002.bam
+hybrid003.bam
+hybrid004.bam
+hybrid005.bam
