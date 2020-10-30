@@ -15,6 +15,6 @@ hzar_par_v2.R: Perform cline analyses
 runNGSadmix.sh: Run NGSadmix for several k
 
 plotNGSadmix.R: Plot NGSadmix results
-Usage: plotNGSadmix.R qopt_file label_file k_num
+Usage: Rscript plotNGSadmix.R qopt_file label_file k_num
 
 example/: Folder with example files
