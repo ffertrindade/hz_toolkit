@@ -1,11 +1,11 @@
 #!/usr/bin/bash
-# rodar varios NGSadmix
+# Run NGSadmix for several k
 
-# beagle de entrada
+# Files
 input=~/angsd/calling/run003_gl_batch001.filtered.beagle.gz
 output=~/ngsadmix/batch001_run003_filtered
 
-# corridas
+# Running
 echo "##### k2... #####"
 NGSadmix -likes $input -K 2 -P 10 -minMaf 0.05 -seed 1 -o $output\_k2
 
