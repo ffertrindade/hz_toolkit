@@ -6,6 +6,7 @@
 import gzip
 import os
 import sys
+import re
 
 ### parsing arguments
 if len(sys.argv) != 8:
@@ -175,8 +176,19 @@ with gzip.open(samtools_out+".gz") as file:
 		site_counts=[]
 		while i < col_num:
 			alleles = str(row.split()[i], "utf-8")
-			al = alleles.upper()
-			site_counts.append(str(al.count(major_pop1[l]))+'_'+str(al.count(minor_pop1[l])))
+			al = re.sub(r'\^.', '', alleles.upper()) # ^. represents that this is the first read base
+			al = re.sub(r'[*$]', '', al) # $ represents that this is the last read base; * represent missing
+
+			match_ins = re.search(r'\+\d', al) # +\d represents that there is an insertion near by, so this site isn't reliable
+			match_del = re.search(r'\-\d', al) # -\d represents that there is a deletion near by, so this site isn't reliable
+			if match_ins:
+				site_counts.append('0_0')
+
+			elif match_del:
+				site_counts.append('0_0')
+
+			else:
+				site_counts.append(str(al.count(major_pop1[l]))+'_'+str(al.count(minor_pop1[l])))
 			i+=3
 
 		hib_counts.append(site_counts)
