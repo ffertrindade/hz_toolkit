@@ -2,7 +2,7 @@
 
 args <- commandArgs(T)
 if (length(args)!=3) {
-  stop("Usage: plotNGSadmix.R qopt_file label_file k_num", call.=FALSE)
+  stop("Usage: Rscript plotNGSadmix.R qopt_file label_file k_num", call.=FALSE)
 }
 
 qopt <- args[1]
