@@ -9,8 +9,8 @@ import sys
 import re
 
 ### parsing arguments
-if len(sys.argv) != 8:
-	print("Usage: createInputAncestryHMM.py mafPop1 nIndPop1 mafPop2 nIndPop2 bamlistHyb nIndHyb outFile")
+if len(sys.argv) < 9:
+	print("Usage: createInputAncestryHMM.py mafPop1 nIndPop1 mafPop2 nIndPop2 [mafPopN nIndPopN] bamlistHyb nIndHyb outFile recRate")
 	exit()
 
 else:
@@ -21,9 +21,12 @@ else:
 	i=1
 	while i < len(my_args):
 		if i%2 == 0:
-			nInd.append(my_args[i])
+			if i == len(my_args)-1:
+				rate = float(my_args[i])
+			else:
+				nInd.append(my_args[i])
 		else:
-			if os.path.isfile(my_args[i]) or i == len(my_args)-1:
+			if os.path.isfile(my_args[i]) or i == len(my_args)-2:
 				input.append(my_args[i])
 
 			else:
@@ -34,6 +37,7 @@ else:
 
 #print(nInd)
 #print(input)
+#print(rate)
 
 ### checking parental sites position - to prepare aHMM file only for overlaid called sites
 def get_sites(maf_pop_file):
@@ -43,12 +47,14 @@ def get_sites(maf_pop_file):
 		for row in file:
 			chr = str(row.split()[0], "utf-8")
 			pos = str(row.split()[1], "utf-8")
-			sites_pop.append(chr+'_'+pos)
+			sites_pop.append(chr+':'+pos)
 	file.close()
 	return sites_pop
 
 sites_pop1 = get_sites(input[0])
 sites_pop2 = get_sites(input[1])
+#print(sites_pop1)
+#print(sites_pop2)
 
 # creating a list of common sites between the parental populations
 sites_final = []
@@ -57,13 +63,15 @@ for a in sites_pop1:
 		if a == b:
 			sites_final.append(a)
 
+#print(sites_final)
+
 # saving this list in a file to use further in samtools mpileup step
 sites_file_name = input[0]+'-'+input[1]
 sites_file_name = sites_file_name.replace('.mafs.gz', '', 2)
 with open(sites_file_name+"-sites.txt", "w") as sites_file:
 	for row in sites_final:
-		chr = row.split("_")[0]
-		pos = row.split("_")[1]
+		chr = row.split(":")[0]
+		pos = row.split(":")[1]
 		print(f"{chr}\t{pos}", file=sites_file)
 sites_file.close()
 
@@ -75,7 +83,7 @@ def get_major_minor(sites, maf_pop_file):
 		with gzip.open(maf_pop_file) as file:
 			next(file)
 			for row in file:
-				chr_pos_row = str(row.split()[0], "utf-8")+"_"+str(row.split()[1], "utf-8")
+				chr_pos_row = str(row.split()[0], "utf-8")+":"+str(row.split()[1], "utf-8")
 				if s == chr_pos_row: # to maintain all sites in the same order
 					maj = str(row.split()[2], "utf-8")
 					min = str(row.split()[3], "utf-8")
@@ -118,7 +126,7 @@ while i < len(pop1_maj_min):
 
 	i+=1
 
-print(ale_pop2_order)
+#print(ale_pop2_order)
 
 ### performing allele counts for the parental panels
 def get_parental_counts(pop_maj_min, nInd, pop2_order=""):
@@ -201,10 +209,12 @@ with gzip.open(samtools_out+".gz") as file:
 # chr pos pop1A pop1a pop2A pop2a morgans sam1A sam1a sam2A sam2a
 with open(input[3], "w+") as output:
 	i=0
+	chr0 = ""
+	pos0 = ""
 	while i < len(sites_final):
 		site = sites_final[i]
-		chr = site.split("_")[0]
-		pos = site.split("_")[1]
+		chr = str(site.split(":")[0])
+		pos = int(site.split(":")[1])
 
 		pop1A = pop1_counts[i].split("_")[0]
 		pop1a = pop1_counts[i].split("_")[1]
@@ -212,14 +222,22 @@ with open(input[3], "w+") as output:
 		pop2A = pop2_counts[i].split("_")[0]
 		pop2a = pop2_counts[i].split("_")[1]
 
-		morg = 1
-
 		hc=[]
 		for h in hib_counts[i]:
 			hc.append(h.split("_")[0])
 			hc.append(h.split("_")[1])
 
 		hib = "\t".join(hc)
+
+		if i == 0 or chr != chr0:
+			morg = pos*rate
+			morg = f"{morg:.9f}"
+		else:
+			morg = (pos-pos0)*rate
+			morg = f"{morg:.9f}"
+		site0 = sites_final[i]
+		chr0 = str(site0.split(":")[0])
+		pos0 = int(site0.split(":")[1])
 
 		print(f"{chr}\t{pos}\t{pop1A}\t{pop1a}\t{pop2A}\t{pop2a}\t{morg}\t{hib}", file=output)
 		i+=1
@@ -239,9 +257,9 @@ ChrA1   23312   A       G       0.156889        20
 ChrA1   23859   A       G       0.071042        21
 ChrA1   32649   A       C       0.377877        17
 ChrA1   32927   T       C       0.074211        21
-"""
 
-"""
+
+
 Example of an incomplete samtools mpileup file (generated within this script):
 
 ChrA1   18399   N       0       *       *       12      cCtttttttttt    JJJJJJJJFFJF    2       Ct      JJ      4       tttt    FJAJ    10      ttt
@@ -251,4 +269,5 @@ ChrA1   23312   N       2       gG      Js      36      AaAAAAAAAaaaaaaaaaaaaaaa
 ChrA1   23859   N       1       A       J       72      aAAAAAAAAAAAAAAAAAAaaaaaaaaaaaaAAAAAAAaAaaAAAAAAAAaaAaAAAAAAAAAaaaaaaAAA        JJFJJJJFJJJ
 ChrA1   32649   N       0       *       *       2       A^ZC    JA      2       AA      JJ      2       AA      JJ      2       ^]C^]C  AA      1
 ChrA1   32649   N       0       *       *       2       A^ZC    JA      2       AA      JJ      2       AA      JJ      2       ^]C^]C  AA      1
+
 """
