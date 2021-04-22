@@ -168,7 +168,7 @@ pop2_counts = get_parental_counts(pop2_maj_min, int(nInd[1]), ale_pop2_order)
 ### perform allele counts for the hybrids
 # running mpileup to generate base counts for the hybrids (only for the sites_final)
 samtools_out = input[2]+'.pileup'
-cmd = "samtools mpileup -a -l {0} -q 30 -Q 30 -b {1} > {2}; gzip {2}".format(sites_file_name+"-sites.txt", input[2], samtools_out)
+cmd = "samtools mpileup -a -l {0} -q 30 -Q 30 -d 6 -b {1} > {2}; gzip {2}".format(sites_file_name+"-sites.txt", input[2], samtools_out)
 print(cmd)
 os.system(cmd)
 
