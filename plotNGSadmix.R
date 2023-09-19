@@ -11,7 +11,7 @@ k <- args[3]
 rm(args)
 
 # Get ID and pop info for each individual
-pop<-scan(label)
+pop<-scan(label, what=character())
 
 # Read inferred admixture proportions file
 q<-read.table(qopt)
